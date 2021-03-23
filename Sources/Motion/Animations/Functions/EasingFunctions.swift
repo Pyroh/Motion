@@ -46,13 +46,13 @@ public struct EasingFunction<Value: SIMDRepresentable>: Hashable {
     }
 
     /**
-     Solves for a SIMD value within a given range based on the easing function.
+     Solves for a SIMD value between a given pair of values based on the easing function.
 
      - Parameters:
-        - range: The starting and ending values to interpolate between.
+        - pair: The starting and ending values to interpolate between.
         - fraction: The fraction of progress through the easing curve (from 0.0 to 1.0).
 
-     - Returns: An interpolated SIMD value between the supplied range's bounds based on a fraction (from 0.0 to 1.0) of the easing function.
+     - Returns: An interpolated SIMD value between the supplied pair of values based on a fraction (from 0.0 to 1.0) of the easing function.
      */
     @inlinable public func solveInterpolatedValueSIMD<SIMDType: SupportedSIMD>(_ pair: InterpolatingPair<SIMDType>, fraction: SIMDType.Scalar) -> SIMDType where SIMDType == Value.SIMDType {
         let x = bezier.solve(x: fraction)
@@ -68,7 +68,7 @@ public struct EasingFunction<Value: SIMDRepresentable>: Hashable {
     }
 
     /**
-     Solves for a `Value` within a given range based on the easing function.
+     Solves for a `Value` between a given pair of values based on the easing function.
 
      - Note: This mirrors the `solveSIMD` variant, but works for `Value` types.
      */
@@ -104,7 +104,7 @@ public struct EasingFunction<Value: SIMDRepresentable>: Hashable {
 extension EasingFunction where Value: SupportedSIMD {
 
     /**
-     Solves for a `Value` within a given range based on the easing function when the `Value` type conforms to `SupportedSIMD`.
+     Solves for a `Value` between a given pair of values based on the easing function when the `Value` type conforms to `SupportedSIMD`.
 
      - Note: This mirrors the `solveSIMD` variant, but works for `Value` types and acts as a fast path to skip boxing and unboxing `Value`.
      */

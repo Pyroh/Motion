@@ -108,7 +108,7 @@ public final class BasicAnimation<Value: SIMDRepresentable>: ValueAnimation<Valu
      Since starting the animation from that point doesn't make much sense (i.e. if animating from 1 to 3, and you set the value to 2.5 and the duration is 3s, it'll animate from 2.5 to 3 in 3s, which isn't expected).
      If this is the case, we can determine whereabouts we are in the animation and continue logically from that time (i.e. 2.5 to 3, would probably only take 0.5s).
 
-     If the value is outside the range, or we can't determine what it should be, we'll just start from the beginning, since that's already an unexpected state.
+     If the value doesn't lie between the interpolating pair's values, or we can't determine what it should be, we'll just start from the beginning, since that's already an unexpected state.
      */
     internal func attemptToUpdateAccumulatedTimeToMatchValue() {
         if !_value.approximatelyEqual(to: _fromValue) && !_value.approximatelyEqual(to: _toValue) {
