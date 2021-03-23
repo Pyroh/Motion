@@ -35,22 +35,22 @@ public final class BasicAnimation<Value: SIMDRepresentable>: ValueAnimation<Valu
         }
         set {
             self._fromValue = newValue.simdRepresentation()
-            updateRange()
+            updateInterpolatingPair()
         }
     }
     internal var _fromValue: Value.SIMDType = .zero {
         didSet {
-            updateRange()
+            updateInterpolatingPair()
         }
     }
 
     internal override var _toValue: Value.SIMDType {
         didSet {
-            updateRange()
+            updateInterpolatingPair()
         }
     }
 
-    internal var _range: ClosedRange<Value.SIMDType> = Value.SIMDType.zero...Value.SIMDType.zero
+    internal var _pair: InterpolatingPair<Value.SIMDType> = .zero
 
     /**
      How long, in seconds, the animation should take.
@@ -95,12 +95,12 @@ public final class BasicAnimation<Value: SIMDRepresentable>: ValueAnimation<Valu
     @_specialize(kind: partial, where SIMDType == SIMD32<Double>)
     @_specialize(kind: partial, where SIMDType == SIMD64<Float>)
     @_specialize(kind: partial, where SIMDType == SIMD64<Double>)
-    internal func solveAccumulatedTime<SIMDType: SupportedSIMD>(easingFunction: inout EasingFunction<SIMDType>, range: inout ClosedRange<SIMDType>, value: inout SIMDType) -> CFTimeInterval? {
-        if !range.contains(value) {
+    internal func solveAccumulatedTime<SIMDType: SupportedSIMD>(easingFunction: inout EasingFunction<SIMDType>, pair: inout InterpolatingPair<SIMDType>, value: inout SIMDType) -> CFTimeInterval? {
+        if !pair.contains(value) {
             return nil
         }
 
-        return easingFunction.solveAccumulatedTime(range, value: value)
+        return easingFunction.solveAccumulatedTime(pair, value: value)
     }
 
     /**
@@ -113,7 +113,7 @@ public final class BasicAnimation<Value: SIMDRepresentable>: ValueAnimation<Valu
     internal func attemptToUpdateAccumulatedTimeToMatchValue() {
         if !_value.approximatelyEqual(to: _fromValue) && !_value.approximatelyEqual(to: _toValue) {
             // Try to find out where we are in the animation.
-            if let accumulatedTime = solveAccumulatedTime(easingFunction: &easingFunction, range: &_range, value: &_value) {
+            if let accumulatedTime = solveAccumulatedTime(easingFunction: &easingFunction, pair: &_pair, value: &_value) {
                 self.accumulatedTime = accumulatedTime * duration
             } else {
                 // Unexpected state, reset to beginning of animation.
@@ -169,8 +169,8 @@ public final class BasicAnimation<Value: SIMDRepresentable>: ValueAnimation<Valu
         return value.approximatelyEqual(to: toValue)
     }
 
-    fileprivate func updateRange() {
-        _range = _fromValue..._toValue
+    fileprivate func updateInterpolatingPair() {
+        _pair = .init(from: _fromValue, to: _toValue)
     }
 
     // MARK: - Disabled API
@@ -193,7 +193,7 @@ public final class BasicAnimation<Value: SIMDRepresentable>: ValueAnimation<Valu
 
         let fraction = min(max(0.0, accumulatedTime / duration), 1.0)
 
-        tickOptimized(easingFunction: &easingFunction, range: &_range, fraction: Value.SIMDType.SIMDType.Scalar(fraction), value: &_value)
+        tickOptimized(easingFunction: &easingFunction, pair: &_pair, fraction: Value.SIMDType.SIMDType.Scalar(fraction), value: &_value)
 
         _valueChanged?(value)
 
@@ -219,8 +219,8 @@ public final class BasicAnimation<Value: SIMDRepresentable>: ValueAnimation<Valu
     @_specialize(kind: partial, where SIMDType == SIMD32<Double>)
     @_specialize(kind: partial, where SIMDType == SIMD64<Float>)
     @_specialize(kind: partial, where SIMDType == SIMD64<Double>)
-    internal func tickOptimized<SIMDType: SupportedSIMD>(easingFunction: inout EasingFunction<SIMDType>, range: inout ClosedRange<SIMDType>, fraction: SIMDType.SIMDType.Scalar, value: inout SIMDType) {
-        value = easingFunction.solveInterpolatedValue(range, fraction: fraction)
+    internal func tickOptimized<SIMDType: SupportedSIMD>(easingFunction: inout EasingFunction<SIMDType>, pair: inout InterpolatingPair<SIMDType>, fraction: SIMDType.SIMDType.Scalar, value: inout SIMDType) {
+        value = easingFunction.solveInterpolatedValue(pair, fraction: fraction)
     }
     
 }

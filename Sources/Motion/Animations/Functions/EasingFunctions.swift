@@ -54,15 +54,15 @@ public struct EasingFunction<Value: SIMDRepresentable>: Hashable {
 
      - Returns: An interpolated SIMD value between the supplied range's bounds based on a fraction (from 0.0 to 1.0) of the easing function.
      */
-    @inlinable public func solveInterpolatedValueSIMD<SIMDType: SupportedSIMD>(_ range: ClosedRange<SIMDType>, fraction: SIMDType.Scalar) -> SIMDType where SIMDType == Value.SIMDType {
+    @inlinable public func solveInterpolatedValueSIMD<SIMDType: SupportedSIMD>(_ pair: InterpolatingPair<SIMDType>, fraction: SIMDType.Scalar) -> SIMDType where SIMDType == Value.SIMDType {
         let x = bezier.solve(x: fraction)
 
-        let min = range.lowerBound
-        let max = range.upperBound
+        let src = pair.start
+        let dst = pair.end
 
-        let delta = (max - min)
+        let delta = (dst - src)
 
-        let newValue = min + (delta * x)
+        let newValue = src + (delta * x)
 
         return newValue
     }
@@ -72,24 +72,24 @@ public struct EasingFunction<Value: SIMDRepresentable>: Hashable {
 
      - Note: This mirrors the `solveSIMD` variant, but works for `Value` types.
      */
-    @inlinable public func solveInterpolatedValue(_ range: ClosedRange<Value>, fraction: Value.SIMDType.Scalar) -> Value {
-        let newValue = solveInterpolatedValueSIMD(range.lowerBound.simdRepresentation()...range.upperBound.simdRepresentation(), fraction: fraction)
+    @inlinable public func solveInterpolatedValue(_ pair: InterpolatingPair<Value>, fraction: Value.SIMDType.Scalar) -> Value {
+        let newValue = solveInterpolatedValueSIMD(pair.simdRepresentation(), fraction: fraction)
         return Value(newValue)
     }
 
-    @inlinable internal func solveAccumulatedTimeSIMD<SIMDType: SupportedSIMD>(_ range: ClosedRange<SIMDType>, value: SIMDType) -> CFTimeInterval? where SIMDType == Value.SIMDType {
+    @inlinable internal func solveAccumulatedTimeSIMD<SIMDType: SupportedSIMD>(_ pair: InterpolatingPair<SIMDType>, value: SIMDType) -> CFTimeInterval? where SIMDType == Value.SIMDType {
         guard let usableIndex = value.indices.first(where: { i -> Bool in
-            let fractionComplete = value[i] / (range.upperBound[i] - range.lowerBound[i])
+            let fractionComplete = value[i] / (pair.end[i] - pair.start[i])
             return !(fractionComplete.approximatelyEqual(to: 0.0) || fractionComplete.approximatelyEqual(to: 1.0))
         }) else { return nil }
 
-        let fractionComplete = value[usableIndex] / (range.upperBound[usableIndex] - range.lowerBound[usableIndex])
+        let fractionComplete = value[usableIndex] / (pair.end[usableIndex] - pair.start[usableIndex])
         let t = bezier.solve(y: fractionComplete)
         return (t as! CFTimeInterval)
     }
 
-    @inlinable internal func solveAccumulatedTime(_ range: ClosedRange<Value>, value: Value) -> CFTimeInterval? {
-        return solveAccumulatedTimeSIMD(range.lowerBound.simdRepresentation()...range.upperBound.simdRepresentation(), value: value.simdRepresentation())
+    @inlinable internal func solveAccumulatedTime(_ pair: InterpolatingPair<Value>, value: Value) -> CFTimeInterval? {
+        return solveAccumulatedTimeSIMD(pair.simdRepresentation(), value: value.simdRepresentation())
     }
 
     // MARK: - Hashable
@@ -108,12 +108,12 @@ extension EasingFunction where Value: SupportedSIMD {
 
      - Note: This mirrors the `solveSIMD` variant, but works for `Value` types and acts as a fast path to skip boxing and unboxing `Value`.
      */
-    @inlinable public func solveInterpolatedValue<SIMDType: SupportedSIMD>(_ range: ClosedRange<SIMDType>, fraction: SIMDType.Scalar) -> SIMDType where SIMDType == Value.SIMDType {
-        return solveInterpolatedValueSIMD(range, fraction: fraction)
+    @inlinable public func solveInterpolatedValue<SIMDType: SupportedSIMD>(_ pair: InterpolatingPair<SIMDType>, fraction: SIMDType.Scalar) -> SIMDType where SIMDType == Value.SIMDType {
+        return solveInterpolatedValueSIMD(pair, fraction: fraction)
     }
 
-    @inlinable internal func solveAccumulatedTime<SIMDType: SupportedSIMD>(_ range: ClosedRange<SIMDType>, value: SIMDType) -> CFTimeInterval? where SIMDType == Value.SIMDType {
-        return solveAccumulatedTimeSIMD(range, value: value)
+    @inlinable internal func solveAccumulatedTime<SIMDType: SupportedSIMD>(_ pair: InterpolatingPair<SIMDType>, value: SIMDType) -> CFTimeInterval? where SIMDType == Value.SIMDType {
+        return solveAccumulatedTimeSIMD(pair, value: value)
     }
 
 }

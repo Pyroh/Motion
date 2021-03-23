@@ -155,7 +155,7 @@ extension BasicAnimation: CAKeyframeAnimationEmittable where Value: CAKeyframeAn
         var t = 0.0
         var hasResolved = false
         while !hasResolved {
-            tickOptimized(easingFunction: &easingFunction, range: &_range, fraction: Value.SIMDType.SIMDType.Scalar(t / duration), value: &value)
+            tickOptimized(easingFunction: &easingFunction, pair: &_pair, fraction: Value.SIMDType.SIMDType.Scalar(t / duration), value: &value)
             hasResolved = self.hasResolved(value: &value, toValue: &_toValue)
 
             let nsValue = Value(value).toKeyframeValue()
