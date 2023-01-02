@@ -68,18 +68,4 @@ public struct EasingFunctionGraphView: View {
 
 }
 
-
-struct EasingFunctionGraphView_Previews: PreviewProvider {
-
-    static var previews: some View {
-        Group {
-            ForEach(EasingFunction<CGFloat>.allFunctions, id: \.self) { easingFunction in
-                EasingFunctionGraphView(easingFunction: easingFunction)
-                    .previewLayout(.sizeThatFits)
-            }
-        }
-    }
-
-}
-
 #endif

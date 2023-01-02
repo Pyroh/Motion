@@ -9,13 +9,13 @@ final class BasicAnimationTests: XCTestCase {
     func testEasingFunctions() {
         let easeIn = EasingFunction<CGFloat>.easeIn
 
-        let range: ClosedRange<CGFloat> = 0.0...10.0
+        let range: InterpolatingPair<CGFloat> = .init(from: 0, to: 10)
 
         let startValue = easeIn.solveInterpolatedValue(range, fraction: 0.0)
-        XCTAssert(startValue.approximatelyEqual(to: range.lowerBound))
+        XCTAssert(startValue.approximatelyEqual(to: range.start))
 
         let endValue = easeIn.solveInterpolatedValue(range, fraction: 1.0)
-        XCTAssert(endValue.approximatelyEqual(to: range.upperBound))
+        XCTAssert(endValue.approximatelyEqual(to: range.end))
     }
 
     func testBasicAnimationStartStop() {

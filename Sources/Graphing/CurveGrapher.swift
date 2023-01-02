@@ -15,8 +15,8 @@ struct Graph_Previews: PreviewProvider {
 
     static var previews: some View {
         Group {
-            ValueAnimationGraphView_Previews.previews
-            EasingFunctionGraphView_Previews.previews
+            
+            Text("Nothing !")
         }
     }
 
